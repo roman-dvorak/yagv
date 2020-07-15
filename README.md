@@ -6,14 +6,24 @@ Designed in Ubuntu Linux; Expected to work in any Linux, Windows or OS X
 
 ![Screenshot](doc/img/screenshot.png)
 
-## Requires:
+## Requirement:
 
 * python 2.x (2.7.3 tested)
   http://python.org/
 * pyglet 1.1+ (1.1.4 tested)
-  http://www.pyglet.org 
-  
+  http://www.pyglet.org
+
     sudo python3 -m pip install pyglet
+
+Or from this repository:
+
+    sudo python3 setup.py install
+
+## Development installation
+
+Is possible using the installation script
+
+    python3 setup.py develop
 
 ## Usage:
 
@@ -38,5 +48,5 @@ yagv [file.gcode]
 * Retract/restore detected but invisible (0-length segments).
 * Designed with Slic3r output in mind, may not support other slicing programs (suggestions/patches welcome).
 * Some gcodes unsupported, in particular:
-  * G20: Set Units to Inches (usage unknown) 
+  * G20: Set Units to Inches (usage unknown)
   * Arcs (G2 & G3 ?)
