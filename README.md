@@ -49,6 +49,12 @@ USAGE yagv 0.5.4: [<opts>] file.gcode
                      
 ```
 By default, opens `data/hana_swimsuit_fv_solid_v1.gcode` if no file specified
+## Rut in without x server (DISPLAY)
+
+```bash
+xvfb-run -s "-screen 0 1400x900x24" yagv ***.gcode 
+
+```
 
 ## Issues
 
@@ -73,4 +79,6 @@ Given `--gcode-comments` is enabled for Slic3r and PrusaSlicer.
 ### Non-Planar Slices
 ![Screenshot](img/screenshot-nonplanar.png)
 Gcode from [Slicer4RTN](https://github.com/Spiritdude/Slicer4RTN), conic/tilted slicer for 4- and 5-axis FDM printers
+
+
 

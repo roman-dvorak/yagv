@@ -4,6 +4,7 @@ YAGV_VERSION = "0.5.4"        # -- check Makefile and setup.py too
 
 import pyglet
 import math
+import argparse
 
 # Disable error checking for increased performance
 pyglet.options['debug_gl'] = False
@@ -36,6 +37,63 @@ colorMap = {
 	"motion": [ 0.,0.,1. ]
 }
 
+colorMaps = {
+	"light":
+		{
+			# Misc:
+			"background": [ 1,1,1, 1. ],
+			"grid": [ .2,.2,.2, 1. ],
+			"text": [ 0,0,0, 1. ],
+
+		   # Gcode:
+			"extrude": [ 0.,.8,0. ],
+			"extrude_active": [ .8,0.,0. ],
+			"extrude_wall": [ .9,.9,0. ],
+			"extrude_wall_active": [ .8,.5,0. ],
+			"extrude_support": [ .8,.8,0. ],
+			"extrude_support_active": [ 1,.9,0. ],
+			"retract": [ .8,.8,0. ],
+			"unretract": [ .8,0.,.8 ],
+			"motion": [ 0.,0.,1. ]
+		},
+	"dark":
+		{
+			# Misc:
+			"background": [ 0,0,0, 1],
+			"grid": [ 1,1,1, 0.1 ],
+			"text": [ 1,1,1, 0.7 ],
+
+		   # Gcode:
+			"extrude": [ 0.,.8,0. ],
+			"extrude_active": [ .8,0.,0. ],
+			"extrude_wall": [ .9,.9,0. ],
+			"extrude_wall_active": [ .8,.5,0. ],
+			"extrude_support": [ .8,.8,0. ],
+			"extrude_support_active": [ 1,.9,0. ],
+			"retract": [ .8,.8,0. ],
+			"unretract": [ .8,0.,.8 ],
+			"motion": [ 0.,0.,1. ]
+		},
+	"dark_mono":
+		{
+			# Misc:
+			"background": [ 0,0,0, 1],
+			"grid": [ 1,1,1, 0.1 ],
+			"text": [ 1,1,1, 0.7 ],
+
+		   # Gcode:
+			"extrude": [ .7,.7,.7 ],
+			"extrude_active": [ .8,.8,0.8 ],
+			"extrude_wall": [ .7,.7,.7 ],
+			"extrude_wall_active": [ .8,.8,.8 ],
+			"extrude_support": [ .8,.8,.8 ],
+			"extrude_support_active": [ 0.7,.7,0.7 ],
+			"retract": [ .0,.0,.0 ],
+			"unretract": [ .0,.0,.0 ],
+			"motion": [ 0.,0.,0. ]
+		}
+}
+
 def preg_match(rex,s,m,opts={}):
 	_m = re.search(rex,s)
 	m.clear()
@@ -53,7 +111,7 @@ class App:
 		self.PY = 0.0
 		self.zoom = 1.0
 		self.conf = { }
-		self.conf['bed_size'] = [ 200, 200 ]
+		self.conf['bed_size'] = [ 150, 200 ]
 	
 	def main(self):
 		
@@ -62,41 +120,37 @@ class App:
 
 		path = ''
 
-		i = 1
-		while(i<len(sys.argv)):
-			m = [ ]
-			if preg_match('^--([\w\-]+)=(.*)$',sys.argv[i],m):
-				m[1] = m[1].replace('-','_')
-				self.conf[m[1]] = m[2]
-			elif preg_match('^--([\w\-]+)$',sys.argv[i],m):
-				m[1] = m[1].replace('-','_')
-				self.conf[m[1]] = 1
-			else:
-		 		path = sys.argv[i]
-			i += 1
 
-		if 'help' in self.conf and self.conf['help']:
-			print("""USAGE yagv %s: [<opts>] file.gcode
-   options:
-      --help               display this message
-      --dark               enable dark mode
-      --bed-size=<w>x<h>   set bed size (e.g. 200x200)
-      --no-hud			   dont show HUD help
-""" % YAGV_VERSION)
-			sys.exit(0)
 
-		if 'dark' in self.conf and self.conf['dark']:
-			colorMap['background'] = [ 0,0,0, 1 ]
-			colorMap['grid'] = [ 1,1,1, 0.1 ]
-			colorMap['text'] = [ 1,1,1, 0.7 ]
 
-		if "save" in self.conf:
-			print("Chces ulozit obrazek...")
+		parser = argparse.ArgumentParser(description='Sample app')
 
-		if type(self.conf['bed_size'])==str:
-			self.conf['bed_size'] = list(map(lambda x: int(x),self.conf['bed_size'].split('x')))
-			print("Obtained bed size:", self.conf['bed_size'])
+		parser.add_argument("file", type=argparse.FileType('r', encoding='UTF-8'))
+		parser.add_argument("-d", "--dark", action="store_false", dest="light")
+		parser.add_argument("-n", "--no-hud", action="store_false", dest="hud")
+		parser.add_argument("-k", "--keep", action="store_true", dest="keep")
+		parser.add_argument("--png", dest="save_image")
+		parser.add_argument("-b", "--bed-size", default="150x150")
+		parser.add_argument('--color', default='dark', choices=['light', 'dark', 'dark_mono'], help='Color style (default: %(default)s)')
+		parser.add_argument('--layer', default=0.5, help='')
 
+		self.conf = parser.parse_args()
+
+		print(self.conf)
+
+
+		# if not self.conf.light:
+		# 	colorMap['background'] = [ 0,0,0, 1 ]
+		# 	colorMap['grid'] = [ 1,1,1, 0.1 ]
+		# 	colorMap['text'] = [ 1,1,1, 0.7 ]
+
+		colorMap.update(colorMaps[self.conf.color])
+
+		if type(self.conf.bed_size)==str:
+			self.conf.bed_size = list(map(lambda x: int(x),self.conf.bed_size.split('x')))
+			print("Obtained bed size:", self.conf.bed_size)
+
+		path = self.conf.file.name
 		if len(path)==0:
 			# get the real path to the script
 			script_path = os.path.realpath(__file__)
@@ -110,7 +164,7 @@ class App:
 		self.path = "loading ..."
 
 		# -- create window soon, before loading ...
-		self.window = MyWindow(self, caption="Yet Another GCode Viewer v%s: %s" % (YAGV_VERSION,os.path.basename(path)), resizable=True, width=1024, height=768, keep_open=True, save_screenshot=True)
+		self.window = MyWindow(self, caption="Yet Another GCode Viewer v%s: %s" % (YAGV_VERSION,os.path.basename(path)), resizable=True, width=1024, height=768)
 		pyglet.gl.glClearColor(colorMap['background'][0],colorMap['background'][1],colorMap['background'][2],1)
 
 		# debug: log all events
@@ -119,17 +173,12 @@ class App:
 		self.load(path)
 
 		# default to the middle layer
-		self.layerIdx = len(self.model.layers)//2
+		self.layerIdx = int(len(self.model.layers)*float(self.conf.layer))
+		if(self.layerIdx > len(self.model.layers)-1): self.layerIdx = len(self.model.layers)-1
+		if(self.layerIdx < 0): self.layerIdx = 0
 
-		if 'no-hud' in self.conf and self.conf['no-hud']:
-			pass
 		self.window.hud()
-
-		self.save_screenshot("obr.png")
-
-		print("PRed")
 		pyglet.app.run()
-		print("RUN APP")
 
 	def reload(self):
 		self.load(self.path)
@@ -419,11 +468,9 @@ def glLine(p1,p2,c):
 class MyWindow(pyglet.window.Window):
 
 	# constructor
-	def __init__(self, app, keep_open = True, save_screenshot=True, **kwargs):
+	def __init__(self, app, **kwargs):
 		pyglet.window.Window.__init__(self, **kwargs)
 		self.app = app
-		self.save_screenshot = save_screenshot
-		self.keep_open = keep_open
 		#self.hud()
 	
 	# hud info
@@ -631,10 +678,10 @@ class MyWindow(pyglet.window.Window):
 		glEnd()
 		
 		# draw bed grid
-		for y in range(0,self.app.conf['bed_size'][1]+1):
-			glLine([0,y,0],[self.app.conf['bed_size'][0],y,0],[colorMap['grid'][0],colorMap['grid'][1],colorMap['grid'][2],0.3 if y%10 == 0 else 0.1])
-		for x in range(0,self.app.conf['bed_size'][0]+1):
-			glLine([x,0,0],[x,self.app.conf['bed_size'][1],0],[colorMap['grid'][0],colorMap['grid'][1],colorMap['grid'][2],0.3 if x%10 == 0 else 0.1])
+		# for y in range(0,self.app.conf.bed_size[1]+1):
+		# 	glLine([0,y,0],[self.app.conf.bed_size[0],y,0],[colorMap['grid'][0],colorMap['grid'][1],colorMap['grid'][2],0.3 if y%10 == 0 else 0.1])
+		# for x in range(0,self.app.conf.bed_size[0]+1):
+		# 	glLine([x,0,0],[x,self.app.conf.bed_size[1],0],[colorMap['grid'][0],colorMap['grid'][1],colorMap['grid'][2],0.3 if x%10 == 0 else 0.1])
 
 		# -- draw the model layers
 		#    lower layers
@@ -652,13 +699,10 @@ class MyWindow(pyglet.window.Window):
 		for graphic in self.app.graphics_limbo[self.app.layerIdx+1:]:
 			graphic.draw(GL_LINES)
 		
-		show_hud = 0;
-		if show_hud:
+		if self.app.conf.hud:
 			# disable depth for HUD
 			glDisable(GL_DEPTH_TEST)
 			glDepthMask(0)
-
-
 
 
 			# Set your camera up for 2d, draw 2d scene
@@ -685,12 +729,10 @@ class MyWindow(pyglet.window.Window):
 			glEnable(GL_DEPTH_TEST)
 			glDepthMask(1)
 
-		if self.save_screenshot:
-			self.app.save_screenshot("z_draw.png")
+		if self.app.conf.save_image:
+			self.app.save_screenshot(self.app.conf.save_image)
 
-		if not self.keep_open:
-			print("chci ukoncit")
-
-		pyglet.app.exit()
+		if self.app.conf.save_image and not self.app.conf.keep:
+			pyglet.app.exit()
 
 App().main()
