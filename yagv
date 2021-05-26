@@ -56,6 +56,24 @@ colorMaps = {
 			"unretract": [ .8,0.,.8 ],
 			"motion": [ 0.,0.,1. ]
 		},
+	"light_mono":
+		{
+			# Misc:
+			"background": [ 1,1,1, 1. ],
+			"grid": [ .2,.2,.2, 1. ],
+			"text": [ 0,0,0, 1. ],
+
+		   # Gcode:
+			"extrude": [ .6,.6,.6 ],
+			"extrude_active": [ .3,.3,.3 ],
+			"extrude_wall": [ .3,.3,.3 ],
+			"extrude_wall_active": [ .3,.3,.3 ],
+			"extrude_support": [ .6,.6,.6 ],
+			"extrude_support_active": [ 0.4,.4,0.4 ],
+			"retract": [ .9,.9,.9 ],
+			"unretract": [ .9,.9,.9 ],
+			"motion": [ .9,.9,.9 ]
+		},
 	"dark":
 		{
 			# Misc:
@@ -131,7 +149,7 @@ class App:
 		parser.add_argument("-k", "--keep", action="store_true", dest="keep")
 		parser.add_argument("--png", dest="save_image")
 		parser.add_argument("-b", "--bed-size", default="150x150")
-		parser.add_argument('--color', default='dark', choices=['light', 'dark', 'dark_mono'], help='Color style (default: %(default)s)')
+		parser.add_argument('--color', default='dark', choices=colorMaps.keys(), help='Color style (default: %(default)s)')
 		parser.add_argument('--layer', default=0.5, help='')
 
 		self.conf = parser.parse_args()
